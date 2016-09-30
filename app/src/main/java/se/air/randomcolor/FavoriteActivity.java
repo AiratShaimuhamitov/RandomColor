@@ -22,17 +22,17 @@ import static android.R.attr.id;
 
 public class FavoriteActivity extends AppCompatActivity {
 
-    private TextView textColors;
     private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_favorite);
 
-        LinearLayout linearLayout = new LinearLayout(this);
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.content_favorite);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
+
         ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        setContentView(linearLayout, layoutParams);
 
         ScrollView scrollView = new ScrollView(this);
         linearLayout.addView(scrollView);
@@ -45,8 +45,8 @@ public class FavoriteActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar1);
         setSupportActionBar(toolbar);
 
-        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        //getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.del);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -57,14 +57,12 @@ public class FavoriteActivity extends AppCompatActivity {
             }
         });*/
 
-        /*toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
-           */
-        //textColors = (TextView) findViewById(R.id.textColorDB);
 
         fillColor(scrollLinearLayout);
     }
