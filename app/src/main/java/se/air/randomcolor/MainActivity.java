@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -30,10 +31,12 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 
+    protected int checkedDrawerItemId; // для остлеживания выделения названия в NavigationView
     private TextView colorName;
     private RelativeLayout relativeLayout;
     private String color;
-    private DBHelper dbHelper;
+    protected DBHelper dbHelper;
+    protected NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +68,9 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+        checkedDrawerItemId = R.id.nav_main;
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         dbHelper = new DBHelper(this);
@@ -97,17 +101,35 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        navigationView.getMenu().clear();
+        navigationView.inflateMenu(R.menu.activity_main_drawer);
+
+        navigationView.getMenu().findItem(checkedDrawerItemId).setChecked(true);
+
+        return true;
+    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
+
+        Intent intent = new Intent();
+
         int id = item.getItemId();
+        checkedDrawerItemId = id;
 
         if (id == R.id.nav_favorite) {
-            Intent intent = new Intent(this, FavoriteActivity.class);
-            startActivity(intent);
+            intent = new Intent(MainActivity.this, FavoriteActivity.class);
+
+        } else if (id == R.id.nav_main){
+
         } else if (id == R.id.nav_history) {
+            //intent = new Intent(MainActivity.this, HistoryActivity.class); TODO implement History activity
 
         } else if (id == R.id.nav_share) {
 
@@ -115,10 +137,15 @@ public class MainActivity extends AppCompatActivity
 
         }
 
+        intent.putExtra("checkedDrawerItemId", id);
+        startActivity(intent);
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {

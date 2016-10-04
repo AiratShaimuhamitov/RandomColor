@@ -1,84 +1,74 @@
 package se.air.randomcolor;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.view.ScrollingView;
-import android.support.v7.app.AppCompatActivity;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import static android.R.attr.color;
-import static android.R.attr.id;
-
-public class FavoriteActivity extends AppCompatActivity {
-
-    private DBHelper dbHelper;
+public class FavoriteActivity extends MainActivity implements NavigationView.OnNavigationItemSelectedListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_favorite);
+        setContentView(R.layout.activity_general);
 
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.content_favorite);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
 
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                                            ViewGroup.LayoutParams.MATCH_PARENT); // параметры Layout
 
-        ScrollView scrollView = new ScrollView(this);
+        ScrollView scrollView = new ScrollView(this); // ScrollView для прокрутки LinearLayout's
         linearLayout.addView(scrollView);
 
-        LinearLayout scrollLinearLayout = new LinearLayout(this);
+        LinearLayout scrollLinearLayout = new LinearLayout(this); /* ScrollView работает только с одним Layout,
+                                                                     поэтому добовляем еще один внутрь ScrollView */
+
         scrollLinearLayout.setOrientation(LinearLayout.VERTICAL);
         scrollLinearLayout.setLayoutParams(layoutParams);
-        scrollView.addView(scrollLinearLayout);
+        scrollView.addView(scrollLinearLayout);                    /* Иерархия Layout элементов: LinearLayout -> ScrollView ->
+                                                                      LinearLayout -> n * LinearLayout (где n = кол-во цветов) */
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar1);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_gen);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
 
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.del);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
+        checkedDrawerItemId = getIntent().getIntExtra("checkedDrawerItemId", checkedDrawerItemId);
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
-        fillColor(scrollLinearLayout);
+
+        fillColors(scrollLinearLayout);
     }
 
-    private void fillColor(LinearLayout linearLayout){
+    private void fillColors(LinearLayout linearLayout){ // заполняет переданный Layout цветами (LinearLayout's)
         LinearLayout layout;
         TextView textView;
         ViewGroup.LayoutParams lpView = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 200); // параметры для linearLayout
-
-        dbHelper = new DBHelper(this);
 
         SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
 
         Cursor cursor = sqLiteDatabase.query(DBHelper.TABLE_COLORS, null, null, null, null, null, null); // курсор для БД
 
-        StringBuilder str;
+        StringBuilder str;          // TODO refactoring this code pls...
         if(cursor.moveToFirst()){
             int idColIndex = cursor.getColumnIndex(DBHelper.KEY_ID);
             int colorColIndex = cursor.getColumnIndex(DBHelper.KEY_COLOR);
@@ -99,5 +89,47 @@ public class FavoriteActivity extends AppCompatActivity {
         }
     }
 
+    private LinearLayout prepareLayuot(){
+        return new LinearLayout(this); // TODO implement
+    }
 
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        if (id == R.id.nav_favorite) {
+
+        } else if (id == R.id.nav_main){
+            checkedDrawerItemId = id;
+            Intent intent = new Intent(FavoriteActivity.this, MainActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_history) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout_gen);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Метод который связывает ToolBar и макет меню (xml файл)
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

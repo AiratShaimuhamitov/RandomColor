@@ -6,5 +6,6 @@
 
     <string name="action_settings">Settings</string>
     <string name="item1">Copy</string>
-    <string name="title_activity_favorite">FavoriteActivity</string>
+    <string name="title_activity_favorite">Favorite Colors</string>
+    <string name="title_history_activity">Hisrtory</string>
 </resources>

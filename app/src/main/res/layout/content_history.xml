@@ -9,5 +9,4 @@
     tools:context="se.air.randomcolor.FavoriteActivity"
     android:orientation="vertical">
 
-
 </LinearLayout>

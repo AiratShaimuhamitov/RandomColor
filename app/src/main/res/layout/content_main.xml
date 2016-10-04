@@ -14,7 +14,6 @@
     tools:showIn="@layout/app_bar_main">
 
     <TextView
-        android:text="#ffaa32"
         android:textSize="70sp"
         android:id="@+id/color_name"
         android:layout_width="wrap_content"

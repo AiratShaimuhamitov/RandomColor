@@ -24,6 +24,8 @@
 
 
     <include layout="@layout/content_main" />
+    <include layout="@layout/content_favorite" />
+    <include layout="@layout/content_history" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
