@@ -1,17 +1,15 @@
-package se.air.randomcolor;
+package se.air.randomcolor.Activityes;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.view.MotionEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -28,6 +26,9 @@ import android.widget.Toast;
 
 import java.util.Random;
 
+import se.air.randomcolor.DBHelper;
+import se.air.randomcolor.R;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 
@@ -35,7 +36,8 @@ public class MainActivity extends AppCompatActivity
     private TextView colorName;
     private RelativeLayout relativeLayout;
     private String color;
-    protected DBHelper dbHelper;
+    protected DBHelper dbHelperFav;
+    protected DBHelper dbHelperHis;
     protected NavigationView navigationView;
 
     @Override
@@ -45,19 +47,19 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        dbHelper = new DBHelper(this);
+        dbHelperFav = new DBHelper(this, "FavoritesDB", "fav_colors");
+        dbHelperHis = new DBHelper(this, "HistoryDB", "his_colors");
 
-        final SQLiteDatabase database = dbHelper.getWritableDatabase();
+        final SQLiteDatabase database = dbHelperFav.getWritableDatabase();
 
         final ContentValues contentValues = new ContentValues();
-
         final Context context = this.getBaseContext();
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 contentValues.put(DBHelper.KEY_COLOR, color);
-                database.insert(DBHelper.TABLE_COLORS, null, contentValues);
+                database.insert(dbHelperFav.tableName, null, contentValues);
                 Toast toast = Toast.makeText(context, "HEX was saved to favorites", Toast.LENGTH_LONG);
                 toast.show();
             }
@@ -73,15 +75,19 @@ public class MainActivity extends AppCompatActivity
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        dbHelper = new DBHelper(this);
-
         relativeLayout = (RelativeLayout) findViewById(R.id.content_main);
         colorName = (TextView) findViewById(R.id.color_name);
 
-        assert relativeLayout != null;
         relativeLayout.setOnTouchListener(this);
 
         setColor();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        navigationView.getMenu().findItem(R.id.nav_main).setChecked(true);
     }
 
     @Override
@@ -93,6 +99,7 @@ public class MainActivity extends AppCompatActivity
             super.onBackPressed();
         }
     }
+
 
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -118,27 +125,27 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
 
-        Intent intent = new Intent();
-
         int id = item.getItemId();
         checkedDrawerItemId = id;
 
         if (id == R.id.nav_favorite) {
-            intent = new Intent(MainActivity.this, FavoriteActivity.class);
+            Intent intent = new Intent(MainActivity.this, FavoriteActivity.class);
+            intent.putExtra("checkedDrawerItemId", id);
+            startActivity(intent);
 
         } else if (id == R.id.nav_main){
 
         } else if (id == R.id.nav_history) {
-            //intent = new Intent(MainActivity.this, HistoryActivity.class); TODO implement History activity
-
+            Intent intent = new Intent(MainActivity.this, HistoryActivity.class); //TODO implement History activity
+            intent.putExtra("checkedDrawerItemId", id);
+            startActivity(intent);
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
 
         }
 
-        intent.putExtra("checkedDrawerItemId", id);
-        startActivity(intent);
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -169,11 +176,24 @@ public class MainActivity extends AppCompatActivity
                 break;
             case MotionEvent.ACTION_UP: // отпускание
                 setColor();
+                saveColorInHistory();
                 break;
             case MotionEvent.ACTION_CANCEL:
         }
         return true;
     }
+
+    private void saveColorInHistory() {
+        SQLiteDatabase db = dbHelperHis.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DBHelper.KEY_COLOR, color);
+        db.insert(dbHelperHis.tableName, null, contentValues);
+
+        if(dbHelperHis.getColumnsCount(db) > 25){
+            dbHelperHis.deleteFirstColor(dbHelperHis);
+        }
+    }
+
 
     private void setColor(){
         color = getRandomColor();
