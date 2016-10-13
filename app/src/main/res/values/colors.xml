@@ -3,4 +3,10 @@
     <color name="colorPrimary">#1abc9c</color>
     <color name="colorPrimaryDark">#16a085</color>
     <color name="colorAccent">#1abc9c</color>
+
+    <color name="widget_button_pressed">#FFFF00</color>
+
+    <color name="widget_button">#00000000</color>
+
+    <color name="widget_background">#FF000000</color>
 </resources>

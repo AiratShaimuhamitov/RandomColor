@@ -14,15 +14,6 @@
     tools:showIn="@layout/app_bar_main">
 
     <TextView
-        android:textSize="70sp"
-        android:text="#22f1aa"
-        android:id="@+id/colorHexView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
-    <TextView
         android:text="RGB(12, 42, 23)"
         android:textSize="30sp"
         android:layout_width="wrap_content"
@@ -30,5 +21,15 @@
         android:layout_marginTop="60dp"
         android:id="@+id/colorRGBView"
         android:layout_below="@+id/colorHexView"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:textSize="70sp"
+        android:text="#22f1aa"
+        android:id="@+id/colorHexView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="52dp"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>

@@ -26,6 +26,9 @@
             android:name=".Activityes.HistoryActivity"
             android:label="@string/title_history_activity"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".Activityes.ColorInfoActivity"
+            android:theme="@style/AppTheme.NoActionBar"        />
     </application>
 
 </manifest>

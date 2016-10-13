@@ -1,8 +1,12 @@
 package se.air.randomcolor.Activityes;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -12,9 +16,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import se.air.randomcolor.DBHelper;
 import se.air.randomcolor.R;
@@ -54,47 +62,68 @@ public class FavoriteActivity extends MainActivity implements NavigationView.OnN
     }
 
     protected void fillColors(LinearLayout linearLayout, DBHelper dbHelper){ // заполняет переданный Layout цветами (LinearLayout's)
-        LinearLayout layout;
-        TextView textView;
+        ArrayList<LinearLayout> linearLayouts = new ArrayList<>();
+
+        RelativeLayout layout;
 
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams( // параметры для linearLayout
                 LinearLayout.LayoutParams.MATCH_PARENT, 200);
-        layoutParams.setMargins(10, 10, 10, 10);
+        layoutParams.setMargins(0, 10, 0, 10);
 
         SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
 
         Cursor cursor = sqLiteDatabase.query(dbHelper.tableName, null, null, null, null, null, null); // курсор для БД
 
-        StringBuilder str;          // TODO refactoring this code pls...
         if(cursor.moveToFirst()){
-            int idColIndex = cursor.getColumnIndex(DBHelper.KEY_ID);
             int colorColIndex = cursor.getColumnIndex(DBHelper.KEY_COLOR);
 
             do{
-                layout = new LinearLayout(this);
+                String color = cursor.getString(colorColIndex);
+                layout = new RelativeLayout(this);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // TODO REIMPLEMENTATION this code
+                    layout.setBackgroundTintList(new ColorStateList(
+                            new int[][]{new int[]{android.R.attr.state_pressed},
+                                    new int[]{}
+                            },
+                            new int[]{Color.GREEN, Color.parseColor(color)}
+                    ));
+                    layout.setBackgroundTintMode(PorterDuff.Mode.SRC_OVER);
+                }
                 layout.setLayoutParams(layoutParams);
+                prepareLayout(layout, color);
 
-                str = new StringBuilder();
-                str.append(cursor.getInt(idColIndex)).append(". ");
-                str.append(cursor.getString(colorColIndex));
-
-                //layout.setBackgroundColor(Color.parseColor(cursor.getString(colorColIndex))); // set layout color
-                layout.setBackgroundResource(R.drawable.border_shadow);
-
-                textView = new TextView(this);
-                textView.setTextSize(25);
-                textView.setText(str.toString());
-
-                layout.addView(textView);
                 linearLayout.addView(layout);
             }while (cursor.moveToNext());
         }
         cursor.close();
     }
 
-    private LinearLayout prepareLayuot(){
-        return new LinearLayout(this); // TODO implement
+    private void prepareLayout(RelativeLayout layout, String color){
+        layout.setBackgroundResource(R.drawable.border_shadow);
+
+        TextView textView = new TextView(this);
+        textView.setText(color);
+        textView.setTextSize(35);
+
+        RelativeLayout.LayoutParams textViewParams = new  RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        textViewParams.addRule(RelativeLayout.CENTER_VERTICAL);
+        textViewParams.addRule(RelativeLayout.ALIGN_PARENT_START);
+        textViewParams.setMarginStart(30);
+
+        ImageButton imageButton = new ImageButton(this);
+        imageButton.setBackgroundResource(R.drawable.ic_info_black_48dp);
+
+        RelativeLayout.LayoutParams imageButtonParams =  new RelativeLayout.LayoutParams(96, 96);
+        imageButtonParams.addRule(RelativeLayout.CENTER_VERTICAL);
+        imageButtonParams.addRule(RelativeLayout.ALIGN_PARENT_END);
+        imageButtonParams.setMarginEnd(50);
+
+        layout.addView(textView, textViewParams);
+        layout.addView(imageButton, imageButtonParams);
     }
+
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -106,7 +135,6 @@ public class FavoriteActivity extends MainActivity implements NavigationView.OnN
         if (id == R.id.nav_favorite) {
 
         } else if (id == R.id.nav_main){
-
             Intent intent = new Intent(FavoriteActivity.this, MainActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_history) {
@@ -139,4 +167,9 @@ public class FavoriteActivity extends MainActivity implements NavigationView.OnN
             this.finish();
         }
     }
+
+    public void testClick(View view){
+
+    }
+
 }

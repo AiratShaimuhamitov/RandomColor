@@ -5,13 +5,10 @@ import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.view.MotionEvent;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -20,25 +17,29 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Random;
-
 import se.air.randomcolor.DBHelper;
 import se.air.randomcolor.R;
+import se.air.randomcolor.Services.ColorService;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 
     protected int checkedDrawerItemId; // для остлеживания выделения названия в NavigationView
-    private TextView colorName;
+    private TextView colorHEXTextView;
+    private TextView colorRGBTextView;
     private RelativeLayout relativeLayout;
-    private String color;
+    public ColorService colorService;
+    public se.air.randomcolor.Models.Color color;
     protected DBHelper dbHelperFav;
     protected DBHelper dbHelperHis;
     protected NavigationView navigationView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                contentValues.put(DBHelper.KEY_COLOR, color);
+                contentValues.put(DBHelper.KEY_COLOR, color.getColorHEX());
                 database.insert(dbHelperFav.tableName, null, contentValues);
                 Toast toast = Toast.makeText(context, "HEX was saved to favorites", Toast.LENGTH_LONG);
                 toast.show();
@@ -76,10 +77,12 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         relativeLayout = (RelativeLayout) findViewById(R.id.content_main);
-        colorName = (TextView) findViewById(R.id.color_name);
+        colorHEXTextView = (TextView) findViewById(R.id.colorHexView);
+        colorRGBTextView = (TextView) findViewById(R.id.colorRGBView);
 
         relativeLayout.setOnTouchListener(this);
 
+        colorService = new ColorService();
         setColor();
     }
 
@@ -132,6 +135,7 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(MainActivity.this, FavoriteActivity.class);
             intent.putExtra("checkedDrawerItemId", id);
             startActivity(intent);
+            this.onPause();
 
         } else if (id == R.id.nav_main){
 
@@ -145,8 +149,6 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -155,16 +157,22 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        color = savedInstanceState.getString("color");
-        setColor(color);
+    protected void onRestoreInstanceState(Bundle state) {
+        super.onRestoreInstanceState(state);
+        color.setColorHEX(state.getString("colorHEX"));
+        int[] rgb = new int[]{state.getInt("r"), state.getInt("g"), state.getInt("b")};
+        color.setRgb(rgb);
+        setColor(color.getColorHEX(), color.toStringRGB());
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("color", color);
+        outState.putString("colorHEX", color.getColorHEX());
+        int[] rgb = color.getRGB();
+        outState.putInt("r", rgb[0]);
+        outState.putInt("g", rgb[1]);
+        outState.putInt("b", rgb[2]);
     }
 
     @Override
@@ -186,7 +194,7 @@ public class MainActivity extends AppCompatActivity
     private void saveColorInHistory() {
         SQLiteDatabase db = dbHelperHis.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(DBHelper.KEY_COLOR, color);
+        contentValues.put(DBHelper.KEY_COLOR, color.getColorHEX());
         db.insert(dbHelperHis.tableName, null, contentValues);
 
         if(dbHelperHis.getColumnsCount(db) > 25){
@@ -196,38 +204,33 @@ public class MainActivity extends AppCompatActivity
 
 
     private void setColor(){
-        color = getRandomColor();
-        colorName.setText(color);
-        int colorInt = Color.parseColor(color);
+        color = colorService.getRandomColor();
+        color.setRgb(colorService.hexToRqb(color.getColorHEX()));
+
+        colorHEXTextView.setText(color.getColorHEX());
+        colorRGBTextView.setText(color.toStringRGB());
+
+        int colorInt = Color.parseColor(color.getColorHEX());
         relativeLayout.setBackgroundColor(colorInt);
         relativeLayout.invalidate();
     }
 
-    private void setColor(String color){
-        colorName.setText(color);
-        int colorInt = Color.parseColor(color);
+    private void setColor(String colorHex,  String colorRGB){
+        colorHEXTextView.setText(colorHex);
+        colorRGBTextView.setText(colorRGB);
+
+        int colorInt = Color.parseColor(colorHex);
+
         relativeLayout.setBackgroundColor(colorInt);
         relativeLayout.invalidate();
-    }
-
-    private String getRandomColor() {  // возвращает HEX код
-        Random random = new Random();
-        String letters = "0123456789abcdef";
-        StringBuilder color = new StringBuilder();
-        color.append('#');
-        for(int i = 0; i < 6; i++){
-            color.append(letters.charAt(random.nextInt(letters.length())));
-        }
-        return color.toString();
     }
 
     public void copyClick(MenuItem item) {
         Context context = this.getBaseContext();
         ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("", color);
+        ClipData clip = ClipData.newPlainText("", color.getColorHEX());
         clipboardManager.setPrimaryClip(clip);
-        Toast toast = Toast.makeText(context, "Hex code saved to clipboard", Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(context, "Hex code saved to clipboard", Toast.LENGTH_SHORT);
         toast.show();
     }
 }
-
